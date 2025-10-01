@@ -1,7 +1,0 @@
-body{font-family:Arial, sans-serif;background:#0b1220;color:#e6edf3;margin:0;padding:20px}
-header{text-align:center;padding:20px}
-h1{color:#22d3ee}
-section{background:#0f1724;padding:16px;border-radius:12px;margin:14px auto;max-width:800px}
-button{background:#22c1ee;border:none;padding:10px 14px;border-radius:10px;color:#042028;cursor:pointer;font-weight:600}
-#payables .item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid rgba(255,255,255,0.1)}
-pre{white-space:pre-wrap;background:#071019;padding:10px;border-radius:8px}
