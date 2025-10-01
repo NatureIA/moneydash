@@ -1,4 +1,4 @@
-# Render Blueprint — deploy 100% na nuvem (sem instalar nada na sua máquina)
+# Render Blueprint — deploy 100% na nuvem
 services:
   # -----------------------------
   # Backend API (FastAPI + OCR)
@@ -31,7 +31,7 @@ services:
         value: admin@example.com
       - key: DEMO_PASSWORD
         value: admin123
-      # Preencha estes 3 no painel depois (podem ficar assim por enquanto)
+      # Ajuste estes 3 no painel depois, se quiser
       - key: BANK_NUMBER
         value: "001"
       - key: BANK_AGENCY
@@ -64,14 +64,13 @@ services:
         value: ocr_queue
       - key: OCR_LANG
         value: por
-      # usa o mesmo JWT_SECRET da API (opcional para o worker)
       - key: JWT_SECRET
         sync: false
 
   # -----------------------------
-  # Site (frontend React)
+  # Site (frontend React) — estático
   # -----------------------------
-  - type: static_site
+  - type: static
     name: finance-site
     buildCommand: cd frontend && npm i && npm run build
     publishPath: frontend/dist
@@ -81,7 +80,7 @@ services:
         source: /*
         destination: /index.html
     envVars:
-      # durante o build do site, injeta automaticamente a URL pública da API
+      # injeta a URL pública da API durante o build
       - key: VITE_API_URL
         fromService:
           name: finance-api
