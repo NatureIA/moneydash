@@ -1,14 +1,12 @@
-# Render Blueprint — deploy 100% na nuvem (compatível)
 services:
   # -----------------------------
-  # Backend API (FastAPI + OCR) — Docker
+  # Backend API (FastAPI + OCR)
   # -----------------------------
   - type: web
     name: finance-api
     env: docker
     dockerfilePath: backend/Dockerfile
     autoDeploy: true
-    # sem startCommand (usa CMD do Dockerfile)
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -19,19 +17,12 @@ services:
           name: finance-redis
           type: redis
           property: connectionString
-      - key: RECEIPTS_DIR
-        value: /data/receipts
-      - key: RQ_OCR_QUEUE
-        value: ocr_queue
-      - key: OCR_LANG
-        value: por
       - key: JWT_SECRET
-        value: change_me_super_secret   # edite depois se quiser
+        value: change_me_super_secret
       - key: DEMO_EMAIL
         value: admin@example.com
       - key: DEMO_PASSWORD
         value: admin123
-      # Ajuste estes 3 no painel depois, se quiser:
       - key: BANK_NUMBER
         value: "001"
       - key: BANK_AGENCY
@@ -40,16 +31,13 @@ services:
         value: "123456-7"
 
   # -----------------------------
-  # Worker (fila de OCR) — Docker
+  # Worker (fila OCR)
   # -----------------------------
   - type: worker
     name: finance-worker
     env: docker
     dockerfilePath: backend/Dockerfile
     autoDeploy: true
-    # sem startCommand (usa CMD do Dockerfile; mas nosso Dockerfile inicia uvicorn)
-    # então sobrescrevemos via command aqui mesmo:
-    startCommand: rq worker -u $REDIS_URL ocr_queue
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -60,44 +48,33 @@ services:
           name: finance-redis
           type: redis
           property: connectionString
-      - key: RECEIPTS_DIR
-        value: /data/receipts
-      - key: RQ_OCR_QUEUE
-        value: ocr_queue
-      - key: OCR_LANG
-        value: por
       - key: JWT_SECRET
         value: change_me_super_secret
 
   # -----------------------------
-  # Site (frontend React) — Web (Node)
+  # Site (HTML/JS/CSS estático + Node para injetar API)
   # -----------------------------
   - type: web
     name: finance-site
     env: node
     autoDeploy: true
-    buildCommand: cd frontend && npm ci || npm i && npm run build
-    # Servidor Node simples que injeta /env.js com a URL da API em runtime
-    startCommand: node frontend/server.cjs
+    buildCommand: ""
+    startCommand: node server.cjs
     envVars:
-      # pega o HOST público da API e passa para o servidor do site
       - key: API_HOST
         fromService:
           name: finance-api
           type: web
           property: host
       - key: API_SCHEME
-        value: https   # Render usa HTTPS público
+        value: https
 
   # -----------------------------
-  # Redis gerenciado
+  # Redis
   # -----------------------------
   - type: redis
     name: finance-redis
     ipAllowList: []
 
-# -------------------------------
-# Postgres gerenciado
-# -------------------------------
 databases:
   - name: finance-db
