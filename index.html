@@ -1,18 +1,33 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finance Website</title>
-    <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-    <h1>Plataforma Financeira</h1>
-    <div id="app"></div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plataforma Financeira</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+  <h1>Plataforma Financeira</h1>
 
-    <!-- injeta variáveis em runtime -->
-    <script src="/env.js"></script>
-    <!-- seu código JS -->
-    <script src="script.js"></script>
-  </body>
+  <section>
+    <h2>Saldo Bancário</h2>
+    <div id="saldo">R$ 0,00</div>
+  </section>
+
+  <section>
+    <h2>Contas</h2>
+    <button onclick="novaConta()">Adicionar Conta</button>
+    <div id="contas"></div>
+  </section>
+
+  <section>
+    <h2>Upload de Cupom Fiscal</h2>
+    <input type="file" id="cupomInput" accept="image/*">
+    <button onclick="enviarCupom()">Enviar</button>
+    <div id="ocrResultado"></div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
 </html>
