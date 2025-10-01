@@ -1,72 +1,70 @@
-// Banco simulado no navegador
-function getContas() {
-  return JSON.parse(localStorage.getItem("contas") || "[]")
+// >>>>>> ALTERE PARA A URL DO SEU BACKEND <<<<<<
+const BACKEND_BASE = "https://SEU_BACKEND_AQUI"  
+
+async function apiGet(path){
+  const res = await fetch(`${BACKEND_BASE}${path}`)
+  if(!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+async function apiPost(path, body){
+  const res = await fetch(`${BACKEND_BASE}${path}`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  })
+  if(!res.ok) throw new Error(await res.text())
+  return res.json()
 }
 
-function salvarContas(contas) {
-  localStorage.setItem("contas", JSON.stringify(contas))
-  atualizarTela()
+// SALDO
+async function refreshBalance(){
+  document.getElementById('balance').innerText = 'Carregando...'
+  try{
+    const data = await apiGet('/api/bank/balance')
+    document.getElementById('balance').innerText = data.available !== undefined
+      ? `R$ ${Number(data.available).toLocaleString('pt-BR',{minimumFractionDigits:2})}`
+      : JSON.stringify(data)
+  }catch(e){ document.getElementById('balance').innerText = 'Erro: '+e.message }
 }
 
-function calcularSaldo() {
-  const contas = getContas()
-  let saldoInicial = 1000
-  let gastos = contas.filter(c => c.status === "pendente").reduce((s, c) => s + c.valor, 0)
-  return saldoInicial - gastos
-}
-
-function atualizarTela() {
-  document.getElementById("saldo").innerText = "R$ " + calcularSaldo().toFixed(2)
-
-  const contas = getContas()
-  const div = document.getElementById("contas")
-  div.innerHTML = ""
-  contas.forEach((c, i) => {
-    const el = document.createElement("div")
-    el.className = "conta " + (c.status === "pago" ? "pago" : "")
-    el.innerHTML = `
-      <span>${c.descricao} - R$ ${c.valor.toFixed(2)}</span>
-      <button onclick="marcarPago(${i})">${c.status === "pendente" ? "Pagar" : "Reabrir"}</button>
-    `
-    div.appendChild(el)
+// CONTAS
+async function listPayables(){
+  const arr = await apiGet('/api/payables')
+  const el = document.getElementById('payables')
+  el.innerHTML = ''
+  arr.forEach(p=>{
+    const div = document.createElement('div'); div.className='item'
+    div.innerHTML = `${p.title} — R$${p.amount.toFixed(2)} <button onclick="markPaid(${p.id})">${p.status==='paid'?'Desfazer':'Pagar'}</button>`
+    el.appendChild(div)
   })
 }
-
-function novaConta() {
-  const descricao = prompt("Descrição da conta:")
-  const valor = parseFloat(prompt("Valor (R$):"))
-  if (!descricao || isNaN(valor)) return
-  const contas = getContas()
-  contas.push({ descricao, valor, status: "pendente" })
-  salvarContas(contas)
+async function addPayable(){
+  const title = prompt('Título:')
+  const amount = parseFloat(prompt('Valor:'))
+  if(!title||isNaN(amount)) return
+  await apiPost('/api/payables',{title,amount})
+  listPayables()
+}
+async function markPaid(id){
+  await apiPost(`/api/payables/${id}`,{status:'paid'})
+  listPayables()
 }
 
-function marcarPago(i) {
-  const contas = getContas()
-  contas[i].status = contas[i].status === "pendente" ? "pago" : "pendente"
-  salvarContas(contas)
+// OCR
+async function uploadReceipt(){
+  const input = document.getElementById('receiptFile')
+  if(!input.files.length) return alert('Selecione imagem')
+  document.getElementById('ocrResult').innerText='Processando...'
+  const file=input.files[0]; const url=URL.createObjectURL(file)
+  const res=await Tesseract.recognize(url,'por'); const txt=res.data.text||''
+  document.getElementById('ocrResult').innerText=txt
+  await apiPost('/api/payables',{title:'Cupom',amount:0})
+  listPayables()
 }
 
-async function enviarCupom() {
-  const input = document.getElementById("cupomInput")
-  if (!input.files.length) return alert("Selecione uma imagem!")
+document.getElementById('btn-refresh-balance').onclick=refreshBalance
+document.getElementById('btn-list').onclick=listPayables
+document.getElementById('btn-add').onclick=addPayable
+document.getElementById('btn-upload').onclick=uploadReceipt
 
-  const file = input.files[0]
-  const image = URL.createObjectURL(file)
-
-  document.getElementById("ocrResultado").innerText = "Lendo cupom..."
-  const result = await Tesseract.recognize(image, "por")
-
-  const texto = result.data.text.trim()
-  document.getElementById("ocrResultado").innerText = "Cupom lido: " + texto
-
-  // Pega primeira linha como descrição e valor fixo
-  if (texto) {
-    const descricao = texto.split("\n")[0]
-    const contas = getContas()
-    contas.push({ descricao, valor: 10.0, status: "pendente" })
-    salvarContas(contas)
-  }
-}
-
-window.onload = atualizarTela
+refreshBalance(); listPayables()
