@@ -1,5 +1,8 @@
 # Render Blueprint — deploy 100% na nuvem (sem instalar nada na sua máquina)
 services:
+  # -----------------------------
+  # Backend API (FastAPI + OCR)
+  # -----------------------------
   - type: web
     name: finance-api
     env: docker
@@ -28,7 +31,7 @@ services:
         value: admin@example.com
       - key: DEMO_PASSWORD
         value: admin123
-      # Preencha estes 3 no painel da Render após criar (ou deixe estes exemplos e troque depois)
+      # Preencha estes 3 no painel depois (podem ficar assim por enquanto)
       - key: BANK_NUMBER
         value: "001"
       - key: BANK_AGENCY
@@ -36,6 +39,9 @@ services:
       - key: BANK_ACCOUNT
         value: "123456-7"
 
+  # -----------------------------
+  # Worker (fila de OCR)
+  # -----------------------------
   - type: worker
     name: finance-worker
     env: docker
@@ -58,12 +64,15 @@ services:
         value: ocr_queue
       - key: OCR_LANG
         value: por
+      # usa o mesmo JWT_SECRET da API (opcional para o worker)
       - key: JWT_SECRET
         sync: false
 
-  - type: static
+  # -----------------------------
+  # Site (frontend React)
+  # -----------------------------
+  - type: static_site
     name: finance-site
-    env: static
     buildCommand: cd frontend && npm i && npm run build
     publishPath: frontend/dist
     autoDeploy: true
@@ -72,16 +81,22 @@ services:
         source: /*
         destination: /index.html
     envVars:
-      # Durante o build do site, aponta automaticamente para a URL do backend
+      # durante o build do site, injeta automaticamente a URL pública da API
       - key: VITE_API_URL
         fromService:
           name: finance-api
           type: web
           property: url
 
+  # -----------------------------
+  # Redis gerenciado
+  # -----------------------------
   - type: redis
     name: finance-redis
     ipAllowList: []
 
+# -------------------------------
+# Postgres gerenciado
+# -------------------------------
 databases:
   - name: finance-db
