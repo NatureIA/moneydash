@@ -1,14 +1,14 @@
-# Render Blueprint — deploy 100% na nuvem (compatível com contas que não aceitam "static/static_site")
+# Render Blueprint — deploy 100% na nuvem (compatível)
 services:
   # -----------------------------
-  # Backend API (FastAPI + OCR)
+  # Backend API (FastAPI + OCR) — Docker
   # -----------------------------
   - type: web
     name: finance-api
     env: docker
     dockerfilePath: backend/Dockerfile
     autoDeploy: true
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    # sem startCommand (usa CMD do Dockerfile)
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -26,12 +26,12 @@ services:
       - key: OCR_LANG
         value: por
       - key: JWT_SECRET
-        generate: true
+        value: change_me_super_secret   # edite depois se quiser
       - key: DEMO_EMAIL
         value: admin@example.com
       - key: DEMO_PASSWORD
         value: admin123
-      # Ajuste estes 3 depois, se quiser:
+      # Ajuste estes 3 no painel depois, se quiser:
       - key: BANK_NUMBER
         value: "001"
       - key: BANK_AGENCY
@@ -40,13 +40,15 @@ services:
         value: "123456-7"
 
   # -----------------------------
-  # Worker (fila de OCR)
+  # Worker (fila de OCR) — Docker
   # -----------------------------
   - type: worker
     name: finance-worker
     env: docker
     dockerfilePath: backend/Dockerfile
     autoDeploy: true
+    # sem startCommand (usa CMD do Dockerfile; mas nosso Dockerfile inicia uvicorn)
+    # então sobrescrevemos via command aqui mesmo:
     startCommand: rq worker -u $REDIS_URL ocr_queue
     envVars:
       - key: DATABASE_URL
@@ -65,7 +67,7 @@ services:
       - key: OCR_LANG
         value: por
       - key: JWT_SECRET
-        sync: false
+        value: change_me_super_secret
 
   # -----------------------------
   # Site (frontend React) — Web (Node)
@@ -74,15 +76,18 @@ services:
     name: finance-site
     env: node
     autoDeploy: true
-    buildCommand: cd frontend && npm ci && npm run build
-    startCommand: npx serve -s frontend/dist -l $PORT
+    buildCommand: cd frontend && npm ci || npm i && npm run build
+    # Servidor Node simples que injeta /env.js com a URL da API em runtime
+    startCommand: node frontend/server.cjs
     envVars:
-      # injeta a URL pública da API no build
-      - key: VITE_API_URL
+      # pega o HOST público da API e passa para o servidor do site
+      - key: API_HOST
         fromService:
           name: finance-api
           type: web
-          property: url
+          property: host
+      - key: API_SCHEME
+        value: https   # Render usa HTTPS público
 
   # -----------------------------
   # Redis gerenciado
