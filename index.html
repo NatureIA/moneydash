@@ -1,32 +1,36 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plataforma Financeira</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard Financeiro</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
-  <h1>Plataforma Financeira</h1>
+  <header><h1>Financeiro</h1></header>
 
-  <section>
-    <h2>Saldo Bancário</h2>
-    <div id="saldo">R$ 0,00</div>
-  </section>
+  <main>
+    <section>
+      <h2>Saldo da Conta (Bradesco)</h2>
+      <div id="balance">—</div>
+      <button id="btn-refresh-balance">Atualizar saldo</button>
+    </section>
 
-  <section>
-    <h2>Contas</h2>
-    <button onclick="novaConta()">Adicionar Conta</button>
-    <div id="contas"></div>
-  </section>
+    <section>
+      <h2>Contas</h2>
+      <button id="btn-list">Listar</button>
+      <button id="btn-add">Adicionar</button>
+      <div id="payables"></div>
+    </section>
 
-  <section>
-    <h2>Upload de Cupom Fiscal</h2>
-    <input type="file" id="cupomInput" accept="image/*">
-    <button onclick="enviarCupom()">Enviar</button>
-    <div id="ocrResultado"></div>
-  </section>
+    <section>
+      <h2>Upload de Cupom (OCR)</h2>
+      <input type="file" id="receiptFile" accept="image/*">
+      <button id="btn-upload">Enviar Cupom</button>
+      <pre id="ocrResult"></pre>
+    </section>
+  </main>
 
   <script src="script.js"></script>
 </body>
