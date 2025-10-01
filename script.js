@@ -1,15 +1,72 @@
-// script.js - consome API dinamicamente
-const API_URL = (window.__ENV__ && window.__ENV__.VITE_API_URL) || "http://localhost:8000"
+// Banco simulado no navegador
+function getContas() {
+  return JSON.parse(localStorage.getItem("contas") || "[]")
+}
 
-async function listarContas() {
-  try {
-    const res = await fetch(`${API_URL}/api/payables`)
-    const data = await res.json()
-    document.getElementById("app").innerHTML =
-      "<h2>Contas</h2><pre>" + JSON.stringify(data, null, 2) + "</pre>"
-  } catch (err) {
-    console.error("Erro ao listar contas", err)
+function salvarContas(contas) {
+  localStorage.setItem("contas", JSON.stringify(contas))
+  atualizarTela()
+}
+
+function calcularSaldo() {
+  const contas = getContas()
+  let saldoInicial = 1000
+  let gastos = contas.filter(c => c.status === "pendente").reduce((s, c) => s + c.valor, 0)
+  return saldoInicial - gastos
+}
+
+function atualizarTela() {
+  document.getElementById("saldo").innerText = "R$ " + calcularSaldo().toFixed(2)
+
+  const contas = getContas()
+  const div = document.getElementById("contas")
+  div.innerHTML = ""
+  contas.forEach((c, i) => {
+    const el = document.createElement("div")
+    el.className = "conta " + (c.status === "pago" ? "pago" : "")
+    el.innerHTML = `
+      <span>${c.descricao} - R$ ${c.valor.toFixed(2)}</span>
+      <button onclick="marcarPago(${i})">${c.status === "pendente" ? "Pagar" : "Reabrir"}</button>
+    `
+    div.appendChild(el)
+  })
+}
+
+function novaConta() {
+  const descricao = prompt("Descrição da conta:")
+  const valor = parseFloat(prompt("Valor (R$):"))
+  if (!descricao || isNaN(valor)) return
+  const contas = getContas()
+  contas.push({ descricao, valor, status: "pendente" })
+  salvarContas(contas)
+}
+
+function marcarPago(i) {
+  const contas = getContas()
+  contas[i].status = contas[i].status === "pendente" ? "pago" : "pendente"
+  salvarContas(contas)
+}
+
+async function enviarCupom() {
+  const input = document.getElementById("cupomInput")
+  if (!input.files.length) return alert("Selecione uma imagem!")
+
+  const file = input.files[0]
+  const image = URL.createObjectURL(file)
+
+  document.getElementById("ocrResultado").innerText = "Lendo cupom..."
+  const result = await Tesseract.recognize(image, "por")
+
+  const texto = result.data.text.trim()
+  document.getElementById("ocrResultado").innerText = "Cupom lido: " + texto
+
+  // Pega primeira linha como descrição e valor fixo
+  if (texto) {
+    const descricao = texto.split("\n")[0]
+    const contas = getContas()
+    contas.push({ descricao, valor: 10.0, status: "pendente" })
+    salvarContas(contas)
   }
 }
 
-window.onload = listarContas
+window.onload = atualizarTela
