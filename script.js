@@ -4,7 +4,6 @@
 const STORAGE_KEY = "fluxo:contas:v1"
 const BAL_KEY = "fluxo:saldo_inicial:v1"
 
-// DOM
 const listEl = document.getElementById("list")
 const saldoEl = document.getElementById("saldo")
 const initialInput = document.getElementById("initialBalance")
@@ -29,7 +28,7 @@ const importFile = document.getElementById("importFile")
 
 let editingId = null
 
-// util
+// utils
 function loadContas(){
   return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]")
 }
@@ -52,9 +51,10 @@ saveInitialBtn.onclick = ()=> {
 
 // render
 function calcularSaldo(){
+  // saldo agora = saldo inicial - SOMA das contas PAGAS
   const contas = loadContas()
-  const pendentes = contas.filter(c=> c.status === "pending")
-  const gastos = pendentes.reduce((s,c)=> s + (Number(c.amount)||0), 0)
+  const pagas = contas.filter(c=> c.status === "paid")
+  const gastos = pagas.reduce((s,c)=> s + (Number(c.amount)||0), 0)
   return (Number(getInitial()) || 0) - gastos
 }
 
@@ -91,7 +91,7 @@ function render(){
   saldoEl.innerText = formatBRL(calcularSaldo())
 }
 
-// helpers for XSS-safe display
+// helpers
 function escapeHtml(s=''){ return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }
 
 // actions
@@ -99,6 +99,8 @@ window.togglePaid = function(id){
   const contas = loadContas()
   const i = contas.findIndex(x=>x.id===id)
   if(i<0) return
+  // pagar = marca como paid (desconta do saldo via calcularSaldo)
+  // reabrir = volta a pendente (valor "retorna" ao saldo)
   contas[i].status = contas[i].status === "pending" ? "paid" : "pending"
   saveContas(contas)
 }
@@ -165,16 +167,13 @@ ocrBtn.onclick = async ()=>{
     const res = await Tesseract.recognize(url, 'por')
     const txt = (res.data && res.data.text) ? res.data.text.trim() : ""
     ocrText.textContent = txt || "Nenhum texto detectado."
-    // heurística: captura primeiro valor monetário (formato 0,00 ou 0.000,00)
-    const matches = txt.match(/\\d{1,3}(?:[\\.\\d{3}])*\\,\\d{2}/g) || txt.match(/\\d+\\,\\d{2}/g) || []
+    const matches = txt.match(/\d{1,3}(?:[.\d{3}])*,\d{2}/g) || txt.match(/\d+,\d{2}/g) || []
     let value = 0
     if(matches.length){
-      // pega o maior valor encontrado
       const cleaned = matches.map(s => parseFloat(s.replaceAll('.', '').replace(',', '.')))
       value = Math.max(...cleaned)
     }
-    const title = txt.split('\\n').find(Boolean) || "Cupom"
-    // adiciona como conta
+    const title = txt.split('\n').find(Boolean) || "Cupom"
     const contas = loadContas()
     contas.push({ id: Date.now(), title: title.substr(0,80), amount: Number(value||0), due_date: null, status: "pending" })
     saveContas(contas)
@@ -217,7 +216,7 @@ importFile.onchange = (e)=>{
 filterStatus.onchange = render
 searchInput.oninput = render
 
-// initialize with demo data if empty
+// demo inicial
 if(!localStorage.getItem(STORAGE_KEY)){
   const demo = [
     { id: Date.now()+1, title: "Compra supermercado", amount: 120.50, due_date: null, status: "pending" },
@@ -226,5 +225,4 @@ if(!localStorage.getItem(STORAGE_KEY)){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(demo))
 }
 
-// import/export via buttons are connected earlier
 render()
