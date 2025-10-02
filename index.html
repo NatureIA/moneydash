@@ -6,7 +6,6 @@
   <title>Fluxo Financeiro — Plataforma</title>
   <meta name="description" content="Plataforma para controlar contas a pagar e OCR de cupons — rodando no navegador e no GitHub Pages.">
   <link rel="stylesheet" href="style.css">
-  <!-- Tesseract.js para OCR no navegador -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
@@ -19,16 +18,12 @@
           <p class="subtitle">Controle financeiro + OCR de cupons</p>
         </div>
       </div>
-
       <div class="actions">
-        <!-- botão tema -->
+        <!-- alternar tema -->
         <button id="themeToggle" class="icon-btn" title="Alternar tema">
-          <svg id="themeIcon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-          </svg>
+          <svg id="themeIcon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"></svg>
         </button>
-
-        <button id="importBtn" title="Importar dados (JSON)">Import</button>
+        <button id="importBtn" title="Importar JSON">Import</button>
         <button id="exportBtn" title="Exportar dados">Export</button>
         <button id="newBtn" class="primary">+ Nova Conta</button>
       </div>
@@ -40,12 +35,8 @@
           <h2>Saldo Disponível</h2>
           <div class="saldo-wrap">
             <div id="saldo" class="saldo">R$ 0,00</div>
-            <!-- botão ocultar saldo -->
             <button id="toggleSaldo" class="icon-btn" title="Mostrar/ocultar saldo">
-              <svg id="eyeSaldo" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
+              <svg id="eyeSaldo" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"></svg>
             </button>
           </div>
         </div>
@@ -53,12 +44,8 @@
           <label>Saldo Inicial
             <div class="saldo-wrap">
               <input id="initialBalance" type="number" step="0.01" />
-              <!-- botão ocultar saldo inicial -->
               <button id="toggleInitial" class="icon-btn" title="Mostrar/ocultar saldo inicial">
-                <svg id="eyeInitial" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6">
-                  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
+                <svg id="eyeInitial" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"></svg>
               </button>
             </div>
           </label>
@@ -75,10 +62,9 @@
               <option value="pending">Pendentes</option>
               <option value="paid">Pagas</option>
             </select>
-            <input id="search" placeholder="Buscar por descrição..." />
+            <input id="search" placeholder="Buscar descrição..." />
           </div>
         </div>
-
         <div id="list" class="list"></div>
       </section>
 
@@ -93,11 +79,10 @@
     </main>
 
     <footer class="footer">
-      <small>Feito para deploy no GitHub Pages — dados salvos no navegador (LocalStorage).</small>
+      <small>Feito para GitHub Pages — dados salvos no navegador.</small>
     </footer>
   </div>
 
-  <!-- modal container -->
   <div id="modal" class="modal hidden" aria-hidden="true">
     <div class="modal-content">
       <button id="closeModal" class="close">✕</button>
@@ -121,7 +106,6 @@
   </div>
 
   <input id="importFile" type="file" accept="application/json" class="hidden" />
-
   <script src="script.js" defer></script>
 </body>
 </html>
