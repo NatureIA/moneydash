@@ -212,7 +212,7 @@ filterStatus.onchange = render
 searchInput.oninput = render
 
 // tema
-themeToggle.onclick = ()=>{ document.body.classList.toggle("light") }
+themeToggle.onclick = ()=>{ document.body.classList.toggle("light"); atualizarGrafico() }
 
 // toggle olhos
 saldoEye.onclick = ()=>{
@@ -274,14 +274,14 @@ function atualizarGrafico(){
       plugins:{
         legend:{ display:false },
         datalabels:{
-          color:"#000",
+          color: document.body.classList.contains("light") ? "#000" : "#fff",
           anchor:"end",
           align:"top",
           formatter: v => formatBRL(v)
         }
       },
       scales:{
-        y:{ ticks:{ callback:v=> formatBRL(v) } }
+        y:{ display:false }
       }
     },
     plugins:[ChartDataLabels]
