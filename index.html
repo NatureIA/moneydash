@@ -4,26 +4,23 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Fluxo Financeiro — Plataforma</title>
-  <meta name="description" content="Plataforma para controlar contas a pagar e OCR de cupons — rodando no navegador e no GitHub Pages.">
   <link rel="stylesheet" href="style.css">
-  <!-- Tesseract.js para OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
   <div class="app">
     <header class="topbar">
       <div class="brand">
-        <svg viewBox="0 0 24 24" class="logo" aria-hidden="true"><path d="M3 12a9 9 0 1118 0 9 9 0 01-18 0zm9-6v6l4 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg viewBox="0 0 24 24" class="logo"><path d="M3 12a9 9 0 1118 0 9 9 0 01-18 0zm9-6v6l4 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <div>
           <h1>Fluxo</h1>
           <p class="subtitle">Controle financeiro + OCR de cupons</p>
         </div>
       </div>
-
       <div class="actions">
         <button id="themeToggle" title="Alternar tema">🌙</button>
-        <button id="importBtn" title="Importar dados (JSON)">Import</button>
-        <button id="exportBtn" title="Exportar dados">Export</button>
+        <button id="importBtn">Import</button>
+        <button id="exportBtn">Export</button>
         <button id="newBtn" class="primary">+ Nova Conta</button>
       </div>
     </header>
@@ -34,14 +31,18 @@
           <h2>Saldo Disponível</h2>
           <div class="saldo-row">
             <div id="saldo" class="saldo">R$ 0,00</div>
-            <button id="toggleSaldo" class="icon-btn" title="Mostrar/ocultar saldo">👁</button>
+            <button id="toggleSaldo" class="icon-btn" title="Mostrar/ocultar saldo">
+              <svg id="eyeIcon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
           </div>
         </div>
         <div class="balance-controls">
           <label>Saldo Inicial
             <div class="saldo-row">
               <input id="initialBalance" type="number" step="0.01" />
-              <button id="toggleInitial" class="icon-btn" title="Mostrar/ocultar saldo inicial">👁</button>
+              <button id="toggleInitial" class="icon-btn" title="Mostrar/ocultar saldo inicial">
+                <svg id="eyeIconInitial" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
             </div>
           </label>
           <button id="saveInitial">Salvar</button>
@@ -57,10 +58,9 @@
               <option value="pending">Pendentes</option>
               <option value="paid">Pagas</option>
             </select>
-            <input id="search" placeholder="Buscar por descrição..." />
+            <input id="search" placeholder="Buscar..." />
           </div>
         </div>
-
         <div id="list" class="list"></div>
       </section>
 
@@ -75,25 +75,19 @@
     </main>
 
     <footer class="footer">
-      <small>Feito para deploy no GitHub Pages — dados salvos no navegador (LocalStorage).</small>
+      <small>Dados locais via LocalStorage — deploy GitHub Pages.</small>
     </footer>
   </div>
 
-  <!-- modal container -->
-  <div id="modal" class="modal hidden" aria-hidden="true">
+  <!-- modal -->
+  <div id="modal" class="modal hidden">
     <div class="modal-content">
       <button id="closeModal" class="close">✕</button>
       <h3 id="modalTitle">Nova Conta</h3>
       <form id="form">
-        <label>Descrição
-          <input id="f_desc" required />
-        </label>
-        <label>Valor (R$)
-          <input id="f_val" type="number" step="0.01" required />
-        </label>
-        <label>Vencimento
-          <input id="f_date" type="date" />
-        </label>
+        <label>Descrição <input id="f_desc" required /></label>
+        <label>Valor (R$) <input id="f_val" type="number" step="0.01" required /></label>
+        <label>Vencimento <input id="f_date" type="date" /></label>
         <div class="modal-actions">
           <button type="submit" class="primary">Salvar</button>
           <button type="button" id="deleteBtn">Excluir</button>
