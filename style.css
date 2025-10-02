@@ -48,7 +48,7 @@ button:hover{transform:translateY(-1px)}
 .balance-panel{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
 .saldo{font-size:24px;font-weight:700;color:var(--accent);margin-top:8px}
 .balance-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.balance-controls input{width:120px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;}
+.balance-controls input{width:120px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
 
 /* ícones olho */
 .eye-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px}
@@ -77,6 +77,10 @@ button:hover{transform:translateY(-1px)}
 .modal-content input{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
 .modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;flex-wrap:wrap}
 .hidden{display:none}
+
+/* NOVO: gráfico */
+.chart-panel{min-height:200px}
+#monthChart{width:100%;max-height:220px}
 
 /* responsive */
 @media (min-width:600px){
