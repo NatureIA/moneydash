@@ -1,6 +1,5 @@
 // Plataforma frontend-only: LocalStorage + Tesseract.js OCR
 
-// Storage keys
 const STORAGE_KEY = "fluxo:contas:v1"
 const BAL_KEY = "fluxo:saldo_inicial:v1"
 
@@ -25,8 +24,13 @@ const ocrText = document.getElementById("ocrText")
 const exportBtn = document.getElementById("exportBtn")
 const importBtn = document.getElementById("importBtn")
 const importFile = document.getElementById("importFile")
+const themeToggle = document.getElementById("themeToggle")
+const saldoEye = document.getElementById("saldoEye")
+const initialEye = document.getElementById("initialEye")
 
 let editingId = null
+let saldoHidden = false
+let initialHidden = false
 
 // utils
 function loadContas(){ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") }
@@ -35,17 +39,23 @@ function getInitial(){ return parseFloat(localStorage.getItem(BAL_KEY) || "1000"
 function setInitial(v){ localStorage.setItem(BAL_KEY, String(v)); render() }
 
 initialInput.value = getInitial()
-saveInitialBtn.onclick = ()=> { const v = parseFloat(initialInput.value || "0"); setInitial(v) }
+saveInitialBtn.onclick = ()=> {
+  const v = parseFloat(initialInput.value || "0")
+  setInitial(v)
+}
 
-// render
+// saldo
 function calcularSaldo(){
   const contas = loadContas()
   const pagas = contas.filter(c=> c.status === "paid")
   const gastos = pagas.reduce((s,c)=> s + (Number(c.amount)||0), 0)
   return (Number(getInitial()) || 0) - gastos
 }
-function formatBRL(v){ return "R$ " + Number(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2}) }
+function formatBRL(v){
+  return "R$ " + Number(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2})
+}
 
+// render
 function render(){
   const contas = loadContas()
   const filter = filterStatus.value
@@ -71,15 +81,15 @@ function render(){
       </div>`
     listEl.appendChild(el)
   })
-  if(!saldoHidden){
-    saldoEl.firstChild.textContent = formatBRL(calcularSaldo())
-  }
+
+  saldoEl.innerText = saldoHidden ? "••••••" : formatBRL(calcularSaldo())
+  initialInput.type = initialHidden ? "password" : "number"
 }
 
 // helpers
 function escapeHtml(s=''){ return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }
 
-// actions
+// ações
 window.togglePaid = function(id){
   const contas = loadContas()
   const i = contas.findIndex(x=>x.id===id)
@@ -87,7 +97,6 @@ window.togglePaid = function(id){
   contas[i].status = contas[i].status === "pending" ? "paid" : "pending"
   saveContas(contas)
 }
-
 window.edit = function(id){
   const contas = loadContas()
   const c = contas.find(x=>x.id===id)
@@ -100,7 +109,6 @@ window.edit = function(id){
   deleteBtn.style.display = "inline-block"
   openModal()
 }
-
 newBtn.onclick = () => {
   editingId = null
   modalTitle.innerText = "Nova Conta"
@@ -110,7 +118,6 @@ newBtn.onclick = () => {
   deleteBtn.style.display = "none"
   openModal()
 }
-
 function openModal(){ modal.classList.remove("hidden"); modal.setAttribute("aria-hidden","false") }
 function close(){ modal.classList.add("hidden"); modal.setAttribute("aria-hidden","true") }
 closeModal.onclick = close
@@ -132,7 +139,6 @@ form.onsubmit = (e) => {
   saveContas(contas)
   close()
 }
-
 deleteBtn.onclick = ()=>{
   if(!editingId) return
   let contas = loadContas()
@@ -162,7 +168,10 @@ ocrBtn.onclick = async ()=>{
     contas.push({ id: Date.now(), title: title.substr(0,80), amount: Number(value||0), due_date: null, status: "pending" })
     saveContas(contas)
     alert("Cupom processado e conta adicionada.")
-  }catch(err){ console.error(err); ocrText.textContent = "Erro: " + err.message }
+  }catch(err){
+    console.error(err)
+    ocrText.textContent = "Erro durante OCR: " + (err.message || err)
+  }
 }
 
 // import/export
@@ -186,16 +195,37 @@ importFile.onchange = (e)=>{
       if(!Array.isArray(parsed)) throw new Error("Arquivo inválido")
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
       render()
-      alert("Dados importados.")
-    }catch(err){ alert("Erro: "+err.message) }
+      alert("Dados importados com sucesso.")
+    }catch(err){ alert("Erro ao importar: "+err.message) }
   }
   reader.readAsText(f)
 }
 
+// search/filter
 filterStatus.onchange = render
 searchInput.oninput = render
 
-// demo
+// tema
+themeToggle.onclick = ()=>{
+  document.body.classList.toggle("light")
+}
+
+// toggle olhos
+saldoEye.onclick = ()=>{
+  saldoHidden = !saldoHidden
+  render()
+  saldoEye.innerHTML = saldoHidden ? eyeClosedSvg : eyeOpenSvg
+}
+initialEye.onclick = ()=>{
+  initialHidden = !initialHidden
+  render()
+  initialEye.innerHTML = initialHidden ? eyeClosedSvg : eyeOpenSvg
+}
+
+const eyeOpenSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>`
+const eyeClosedSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.97 10.97 0 0 1 12 20c-7 0-11-8-11-8a21.74 21.74 0 0 1 5.17-6.88M9.88 9.88A3 3 0 0 0 12 15a3 3 0 0 0 2.12-5.12"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+
+// demo inicial
 if(!localStorage.getItem(STORAGE_KEY)){
   const demo = [
     { id: Date.now()+1, title: "Compra supermercado", amount: 120.50, due_date: null, status: "pending" },
@@ -204,40 +234,3 @@ if(!localStorage.getItem(STORAGE_KEY)){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(demo))
 }
 render()
-
-// === NOVOS RECURSOS ===
-// Tema claro/escuro
-const themeToggle = document.getElementById("themeToggle");
-if(localStorage.getItem("theme") === "light") document.body.classList.add("light");
-themeToggle.onclick = () => {
-  document.body.classList.toggle("light");
-  localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
-};
-
-// Mostrar/ocultar saldo disponível
-const eyeSaldoBtn = document.getElementById("toggleSaldo");
-let saldoHidden = false;
-eyeSaldoBtn.onclick = () => {
-  saldoHidden = !saldoHidden;
-  if(saldoHidden){
-    saldoEl.firstChild.textContent = "••••";
-    document.getElementById("eyeSaldo").outerHTML = `<svg id="eyeSaldo" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.77 21.77 0 0 1 5.06-6.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.77 21.77 0 0 1-4.12 5.43M1 1l22 22"/></svg>`;
-  } else {
-    render();
-    document.getElementById("eyeSaldo").outerHTML = `<svg id="eyeSaldo" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
-  }
-};
-
-// Mostrar/ocultar saldo inicial
-const eyeInitialBtn = document.getElementById("toggleInitial");
-let initialHidden = false;
-eyeInitialBtn.onclick = () => {
-  initialHidden = !initialHidden;
-  if(initialHidden){
-    initialInput.type = "password";
-    document.getElementById("eyeInitial").outerHTML = `<svg id="eyeInitial" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.77 21.77 0 0 1 5.06-6.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.77 21.77 0 0 1-4.12 5.43M1 1l22 22"/></svg>`;
-  } else {
-    initialInput.type = "number";
-    document.getElementById("eyeInitial").outerHTML = `<svg id="eyeInitial" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
-  }
-};
