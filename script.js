@@ -27,15 +27,13 @@ const importFile = document.getElementById("importFile")
 const themeToggle = document.getElementById("themeToggle")
 const saldoEye = document.getElementById("saldoEye")
 const initialEye = document.getElementById("initialEye")
-
-// NOVOS ELEMENTOS DO GRÁFICO
 const yearFilter = document.getElementById("yearFilter")
 const monthChartEl = document.getElementById("monthChart")
-let chartInstance = null
 
 let editingId = null
 let saldoHidden = false
 let initialHidden = false
+let chartInstance = null
 
 // utils
 function loadContas(){ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") }
@@ -214,9 +212,7 @@ filterStatus.onchange = render
 searchInput.oninput = render
 
 // tema
-themeToggle.onclick = ()=>{
-  document.body.classList.toggle("light")
-}
+themeToggle.onclick = ()=>{ document.body.classList.toggle("light") }
 
 // toggle olhos
 saldoEye.onclick = ()=>{
@@ -233,18 +229,7 @@ initialEye.onclick = ()=>{
 const eyeOpenSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>`
 const eyeClosedSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.97 10.97 0 0 1 12 20c-7 0-11-8-11-8a21.74 21.74 0 0 1 5.17-6.88M9.88 9.88A3 3 0 0 0 12 15a3 3 0 0 0 2.12-5.12"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
 
-// demo inicial
-if(!localStorage.getItem(STORAGE_KEY)){
-  const demo = [
-    { id: Date.now()+1, title: "Compra supermercado", amount: 120.50, due_date: "2025-01-10", status: "pending" },
-    { id: Date.now()+2, title: "Internet", amount: 89.9, due_date: "2025-02-05", status: "paid" }
-  ]
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(demo))
-}
-
-// =====================
-// NOVO: gráfico mensal
-// =====================
+// gráfico mensal
 function atualizarAnosDisponiveis(){
   const contas = loadContas()
   const anos = [...new Set(contas.map(c=>{
@@ -277,21 +262,33 @@ function atualizarGrafico(){
     data:{
       labels,
       datasets:[{
-        label:"Total de Contas",
         data: valores,
         borderColor:"#60a5fa",
         backgroundColor:"rgba(96,165,250,0.2)",
+        tension:0.3,
         fill:true,
-        tension:0.3
+        pointBackgroundColor:"#60a5fa"
       }]
     },
     options:{
-      plugins:{legend:{display:true}},
-      scales:{y:{beginAtZero:true}}
-    }
+      plugins:{
+        legend:{ display:false },
+        datalabels:{
+          color:"#000",
+          anchor:"end",
+          align:"top",
+          formatter: v => formatBRL(v)
+        }
+      },
+      scales:{
+        y:{ ticks:{ callback:v=> formatBRL(v) } }
+      }
+    },
+    plugins:[ChartDataLabels]
   })
 }
 
 yearFilter.onchange = atualizarGrafico
 
+// start
 render()
