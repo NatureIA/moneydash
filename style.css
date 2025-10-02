@@ -28,6 +28,8 @@ button:hover{transform:translateY(-1px)}
 .saldo{font-size:24px;font-weight:700;color:var(--accent);margin-top:8px}
 .balance-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .balance-controls input{width:120px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+.saldo-wrap{display:flex;align-items:center;gap:6px}
+.eye{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:16px}
 
 .list-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px}
 .filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
@@ -56,7 +58,18 @@ button:hover{transform:translateY(-1px)}
 .modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;flex-wrap:wrap}
 .hidden{display:none}
 
-/* responsive breakpoints */
+/* tema claro */
+body.light {
+  background: linear-gradient(180deg,#f9fafb,#f3f4f6);
+  color:#111827;
+}
+body.light .panel { background:#fff; border-color:#e5e7eb; }
+body.light .topbar { background:#f3f4f6; }
+body.light .saldo { color:#047857; }
+body.light button { border-color:#e5e7eb; color:#2563eb; }
+body.light .footer { color:#4b5563; }
+
+/* responsive */
 @media (min-width:600px){
   .actions{flex-wrap:nowrap}
   .filters{flex-wrap:nowrap;width:auto}
