@@ -137,4 +137,78 @@ document.getElementById("modal").addEventListener("click", (e)=>{ if(e.target.id
 
 form.onsubmit = (e) => {
   e.preventDefault()
- 
+  const title = f_desc.value.trim()
+  const amount = parseFloat(f_val.value || "0")
+  const due_date = f_date.value || null
+  let contas = loadContas()
+  if(editingId){
+    const i = contas.findIndex(x=>x.id===editingId)
+    contas[i].title = title; contas[i].amount = amount; contas[i].due_date = due_date
+  } else {
+    contas.push({ id: Date.now(), title, amount, due_date, status: "pending" })
+  }
+  saveContas(contas); close()
+}
+deleteBtn.onclick = ()=>{ if(editingId){ let contas = loadContas().filter(x=>x.id !== editingId); saveContas(contas); close() } }
+
+// OCR
+ocrBtn.onclick = async ()=>{
+  const file = fileInput.files[0]
+  if(!file) return alert("Selecione uma imagem do cupom.")
+  ocrText.textContent = "Processando OCR..."
+  try{
+    const url = URL.createObjectURL(file)
+    const res = await Tesseract.recognize(url, 'por')
+    const txt = (res.data && res.data.text) ? res.data.text.trim() : ""
+    ocrText.textContent = txt || "Nenhum texto detectado."
+    const matches = txt.match(/\d{1,3}(?:[.\d{3}])*,\d{2}/g) || txt.match(/\d+,\d{2}/g) || []
+    let value = 0
+    if(matches.length){
+      const cleaned = matches.map(s => parseFloat(s.replaceAll('.', '').replace(',', '.')))
+      value = Math.max(...cleaned)
+    }
+    const title = txt.split('\n').find(Boolean) || "Cupom"
+    const contas = loadContas()
+    contas.push({ id: Date.now(), title: title.substr(0,80), amount: Number(value||0), due_date: null, status: "pending" })
+    saveContas(contas)
+    alert("Cupom processado e conta adicionada.")
+  }catch(err){ ocrText.textContent = "Erro OCR: " + (err.message || err) }
+}
+
+// import/export
+exportBtn.onclick = ()=>{
+  const data = localStorage.getItem(STORAGE_KEY) || "[]"
+  const filename = `fluxo-dados-${new Date().toISOString().slice(0,19)}.json`
+  const blob = new Blob([data], {type:'application/json'})
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename; a.click()
+  URL.revokeObjectURL(url)
+}
+importBtn.onclick = ()=> importFile.click()
+importFile.onchange = (e)=>{
+  const f = e.target.files[0]; if(!f) return
+  const reader = new FileReader()
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result)
+      if(!Array.isArray(parsed)) throw new Error("Arquivo inválido")
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed)); render(); alert("Dados importados com sucesso.")
+    }catch(err){ alert("Erro ao importar: "+err.message) }
+  }
+  reader.readAsText(f)
+}
+
+// search/filter
+filterStatus.onchange = render
+searchInput.oninput = render
+
+// demo
+if(!localStorage.getItem(STORAGE_KEY)){
+  const demo = [
+    { id: Date.now()+1, title: "Compra supermercado", amount: 120.50, due_date: null, status: "pending" },
+    { id: Date.now()+2, title: "Internet", amount: 89.9, due_date: null, status: "paid" }
+  ]
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(demo))
+}
+render()
