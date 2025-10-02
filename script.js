@@ -28,6 +28,11 @@ const themeToggle = document.getElementById("themeToggle")
 const saldoEye = document.getElementById("saldoEye")
 const initialEye = document.getElementById("initialEye")
 
+// NOVOS ELEMENTOS DO GRÁFICO
+const yearFilter = document.getElementById("yearFilter")
+const monthChartEl = document.getElementById("monthChart")
+let chartInstance = null
+
 let editingId = null
 let saldoHidden = false
 let initialHidden = false
@@ -84,6 +89,9 @@ function render(){
 
   saldoEl.innerText = saldoHidden ? "••••••" : formatBRL(calcularSaldo())
   initialInput.type = initialHidden ? "password" : "number"
+
+  atualizarAnosDisponiveis()
+  atualizarGrafico()
 }
 
 // helpers
@@ -228,9 +236,62 @@ const eyeClosedSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 // demo inicial
 if(!localStorage.getItem(STORAGE_KEY)){
   const demo = [
-    { id: Date.now()+1, title: "Compra supermercado", amount: 120.50, due_date: null, status: "pending" },
-    { id: Date.now()+2, title: "Internet", amount: 89.9, due_date: null, status: "paid" }
+    { id: Date.now()+1, title: "Compra supermercado", amount: 120.50, due_date: "2025-01-10", status: "pending" },
+    { id: Date.now()+2, title: "Internet", amount: 89.9, due_date: "2025-02-05", status: "paid" }
   ]
   localStorage.setItem(STORAGE_KEY, JSON.stringify(demo))
 }
+
+// =====================
+// NOVO: gráfico mensal
+// =====================
+function atualizarAnosDisponiveis(){
+  const contas = loadContas()
+  const anos = [...new Set(contas.map(c=>{
+    if(!c.due_date) return null
+    return new Date(c.due_date).getFullYear()
+  }).filter(Boolean))].sort()
+  yearFilter.innerHTML = anos.map(y=>`<option value="${y}">${y}</option>`).join("")
+}
+
+function atualizarGrafico(){
+  const contas = loadContas()
+  const ano = parseInt(yearFilter.value)
+  if(!ano) return
+
+  const meses = {}
+  contas.forEach(c=>{
+    if(!c.due_date) return
+    const d = new Date(c.due_date)
+    if(d.getFullYear() !== ano) return
+    const mes = d.toLocaleString("pt-BR",{month:"short"})
+    meses[mes] = (meses[mes]||0) + (Number(c.amount)||0)
+  })
+
+  const labels = Object.keys(meses)
+  const valores = Object.values(meses)
+
+  if(chartInstance) chartInstance.destroy()
+  chartInstance = new Chart(monthChartEl, {
+    type:"line",
+    data:{
+      labels,
+      datasets:[{
+        label:"Total de Contas",
+        data: valores,
+        borderColor:"#60a5fa",
+        backgroundColor:"rgba(96,165,250,0.2)",
+        fill:true,
+        tension:0.3
+      }]
+    },
+    options:{
+      plugins:{legend:{display:true}},
+      scales:{y:{beginAtZero:true}}
+    }
+  })
+}
+
+yearFilter.onchange = atualizarGrafico
+
 render()
