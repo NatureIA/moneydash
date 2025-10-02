@@ -9,93 +9,91 @@
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
-<div class="app">
-  <header class="topbar">
-    <div class="brand">
-      <svg viewBox="0 0 24 24" class="logo" aria-hidden="true">
-        <path d="M3 12a9 9 0 1118 0 9 9 0 01-18 0zm9-6v6l4 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <div>
-        <h1>Fluxo</h1>
-        <p class="subtitle">Controle financeiro + OCR de cupons</p>
-      </div>
-    </div>
-    <div class="actions">
-      <button id="themeToggle" title="Alternar tema">🌓</button>
-      <button id="importBtn" title="Importar dados (JSON)">Import</button>
-      <button id="exportBtn" title="Exportar dados">Export</button>
-      <button id="newBtn" class="primary">+ Nova Conta</button>
-    </div>
-  </header>
-
-  <main class="main">
-    <section class="panel balance-panel">
-      <div>
-        <h2>Saldo Disponível</h2>
-        <div id="saldo" class="saldo">R$ 0,00 
-          <button id="toggleSaldo" class="eye-btn" title="Mostrar/ocultar saldo">
-            <svg id="eyeSaldo" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <svg viewBox="0 0 24 24" class="logo" aria-hidden="true"><path d="M3 12a9 9 0 1118 0 9 9 0 01-18 0zm9-6v6l4 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div>
+          <h1>Fluxo</h1>
+          <p class="subtitle">Controle financeiro + OCR de cupons</p>
         </div>
       </div>
-      <div class="balance-controls">
-        <label>Saldo Inicial 
-          <input id="initialBalance" type="number" step="0.01" />
-        </label>
-        <button id="toggleInitial" class="eye-btn" title="Mostrar/ocultar saldo inicial">
-          <svg id="eyeInitial" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-        <button id="saveInitial">Salvar</button>
+      <div class="actions">
+        <button id="themeToggle" title="Alternar tema">Tema</button>
+        <button id="importBtn" title="Importar dados (JSON)">Import</button>
+        <button id="exportBtn" title="Exportar dados">Export</button>
+        <button id="newBtn" class="primary">+ Nova Conta</button>
       </div>
-    </section>
+    </header>
 
-    <section class="panel list-panel">
-      <div class="list-header">
-        <h2>Contas</h2>
-        <div class="filters">
-          <select id="filterStatus">
-            <option value="all">Todas</option>
-            <option value="pending">Pendentes</option>
-            <option value="paid">Pagas</option>
-          </select>
-          <input id="search" placeholder="Buscar por descrição..." />
+    <main class="main">
+      <section class="panel balance-panel">
+        <div>
+          <h2>Saldo Disponível
+            <button id="saldoEye" class="eye-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </h2>
+          <div id="saldo" class="saldo">R$ 0,00</div>
         </div>
-      </div>
-      <div id="list" class="list"></div>
-    </section>
+        <div class="balance-controls">
+          <label>Saldo Inicial
+            <input id="initialBalance" type="number" step="0.01" />
+            <button id="initialEye" class="eye-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </label>
+          <button id="saveInitial">Salvar</button>
+        </div>
+      </section>
 
-    <section class="panel ocr-panel">
-      <h2>Adicionar por Cupom (OCR)</h2>
-      <div class="ocr-row">
-        <input id="fileInput" type="file" accept="image/*" capture="environment" />
-        <button id="ocrBtn" class="primary">Ler Cupom</button>
-      </div>
-      <pre id="ocrText" class="ocr-text"></pre>
-    </section>
-  </main>
+      <section class="panel list-panel">
+        <div class="list-header">
+          <h2>Contas</h2>
+          <div class="filters">
+            <select id="filterStatus">
+              <option value="all">Todas</option>
+              <option value="pending">Pendentes</option>
+              <option value="paid">Pagas</option>
+            </select>
+            <input id="search" placeholder="Buscar por descrição..." />
+          </div>
+        </div>
+        <div id="list" class="list"></div>
+      </section>
 
-  <footer class="footer">
-    <small>Feito para deploy no GitHub Pages — dados salvos no navegador (LocalStorage).</small>
-  </footer>
-</div>
+      <section class="panel ocr-panel">
+        <h2>Adicionar por Cupom (OCR)</h2>
+        <div class="ocr-row">
+          <input id="fileInput" type="file" accept="image/*" capture="environment" />
+          <button id="ocrBtn" class="primary">Ler Cupom</button>
+        </div>
+        <pre id="ocrText" class="ocr-text"></pre>
+      </section>
+    </main>
 
-<div id="modal" class="modal hidden" aria-hidden="true">
-  <div class="modal-content">
-    <button id="closeModal" class="close">✕</button>
-    <h3 id="modalTitle">Nova Conta</h3>
-    <form id="form">
-      <label>Descrição <input id="f_desc" required /> </label>
-      <label>Valor (R$) <input id="f_val" type="number" step="0.01" required /> </label>
-      <label>Vencimento <input id="f_date" type="date" /> </label>
-      <div class="modal-actions">
-        <button type="submit" class="primary">Salvar</button>
-        <button type="button" id="deleteBtn">Excluir</button>
-      </div>
-    </form>
+    <footer class="footer">
+      <small>Feito para deploy no GitHub Pages — dados salvos no navegador (LocalStorage).</small>
+    </footer>
   </div>
-</div>
 
-<input id="importFile" type="file" accept="application/json" class="hidden" />
-<script src="script.js" defer></script>
+  <div id="modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-content">
+      <button id="closeModal" class="close">✕</button>
+      <h3 id="modalTitle">Nova Conta</h3>
+      <form id="form">
+        <label>Descrição <input id="f_desc" required /></label>
+        <label>Valor (R$) <input id="f_val" type="number" step="0.01" required /></label>
+        <label>Vencimento <input id="f_date" type="date" /></label>
+        <div class="modal-actions">
+          <button type="submit" class="primary">Salvar</button>
+          <button type="button" id="deleteBtn">Excluir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <input id="importFile" type="file" accept="application/json" class="hidden" />
+  <script src="script.js" defer></script>
 </body>
 </html>
