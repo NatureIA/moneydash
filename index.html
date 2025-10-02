@@ -6,7 +6,6 @@
   <title>Fluxo Financeiro — Plataforma</title>
   <meta name="description" content="Plataforma para controlar contas a pagar e OCR de cupons — rodando no navegador e no GitHub Pages.">
   <link rel="stylesheet" href="style.css">
-  <!-- Tesseract.js para OCR no navegador -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
@@ -21,6 +20,7 @@
       </div>
 
       <div class="actions">
+        <button id="themeToggle" title="Alternar tema">🌙</button>
         <button id="importBtn" title="Importar dados (JSON)">Import</button>
         <button id="exportBtn" title="Exportar dados">Export</button>
         <button id="newBtn" class="primary">+ Nova Conta</button>
@@ -31,11 +31,17 @@
       <section class="panel balance-panel">
         <div>
           <h2>Saldo Disponível</h2>
-          <div id="saldo" class="saldo">R$ 0,00</div>
+          <div class="saldo-wrap">
+            <div id="saldo" class="saldo">R$ 0,00</div>
+            <button id="toggleSaldo" class="eye">👁</button>
+          </div>
         </div>
         <div class="balance-controls">
           <label>Saldo Inicial
-            <input id="initialBalance" type="number" step="0.01" />
+            <div class="saldo-wrap">
+              <input id="initialBalance" type="number" step="0.01" />
+              <button id="toggleInitial" class="eye">👁</button>
+            </div>
           </label>
           <button id="saveInitial">Salvar</button>
         </div>
@@ -72,7 +78,7 @@
     </footer>
   </div>
 
-  <!-- modal container -->
+  <!-- modal -->
   <div id="modal" class="modal hidden" aria-hidden="true">
     <div class="modal-content">
       <button id="closeModal" class="close">✕</button>
@@ -96,7 +102,6 @@
   </div>
 
   <input id="importFile" type="file" accept="application/json" class="hidden" />
-
   <script src="script.js" defer></script>
 </body>
 </html>
