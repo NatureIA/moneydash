@@ -44,8 +44,8 @@ button.primary{background:linear-gradient(90deg,var(--accent),#34d399);color:#04
 button:hover{transform:translateY(-1px)}
 
 .main{display:grid;grid-template-columns:1fr;gap:16px;margin-top:18px}
-.panel{background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--glass);box-shadow: 0 6px 24px rgba(2,6,23,0.6)}
-.balance-panel{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.{background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--glass);box-shadow: 0 6px 24px rgba(2,6,23,0.6)}
+.balance-{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
 .saldo{font-size:24px;font-weight:700;color:var(--accent);margin-top:8px}
 .balance-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .balance-controls input{width:120px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
@@ -63,8 +63,8 @@ button:hover{transform:translateY(-1px)}
 .item .meta{display:flex;flex-direction:column}
 .item .meta small{color:var(--muted)}
 .item.paid{opacity:0.6;text-decoration:line-through}
-.ocr-panel .ocr-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.ocr-panel input[type=file]{flex:1;min-width:180px}
+.ocr- .ocr-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ocr- input[type=file]{flex:1;min-width:180px}
 .ocr-text{background:#061021;padding:12px;border-radius:8px;margin-top:10px;min-height:48px;max-height:200px;overflow:auto;font-size:13px}
 .footer{text-align:center;margin-top:18px;color:var(--muted);font-size:13px}
 
@@ -91,4 +91,25 @@ button:hover{transform:translateY(-1px)}
 @media (min-width:900px){
   .main{grid-template-columns: 1fr 420px}
   .ocr-panel{grid-column: span 2}
+}
+
+/* 🔽 Ajuste do título do gráfico no mobile */
+@media (max-width: 600px) {
+  .list-header {
+    gap: 4px;
+    margin-bottom: 4px;
+    padding: 2px 0;
+    min-height: 28px;  /* altura menor só no celular */
+    flex-direction: column; /* empilha título e seletor */
+    align-items: flex-start;
+  }
+
+  .list-header h2 {
+    font-size: 14px;   /* título menor no mobile */
+  }
+
+  #yearFilter {
+    font-size: 12px;   /* seletor menor */
+    padding: 2px 4px;
+  }
 }
