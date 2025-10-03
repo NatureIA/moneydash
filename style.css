@@ -93,14 +93,9 @@ button:hover{transform:translateY(-1px)}
   .ocr-panel{grid-column: span 2}
 }
 
-/* 🔽 Ajuste específico do título do gráfico em telas pequenas */
-@media (max-width: 600px) {
-  #monthChart {
-    max-height: 180px; /* gráfico mais compacto no mobile */
-  }
-  .chartjs-title {
-    font-size: 14px !important; /* texto do título menor */
-    margin-bottom: 2px !important;
-    padding: 2px !important; /* área do título menor */
-  }
+/* 🔽 Ajuste para reduzir a área do título do gráfico */
+.chartjs-title {
+  padding: 4px !important;   /* diminui a “caixa” do título */
+  margin-bottom: 0 !important;
+  font-size: 14px !important; /* opcional, pode tirar se quiser só o quadrado menor */
 }
