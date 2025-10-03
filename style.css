@@ -95,21 +95,18 @@ button:hover{transform:translateY(-1px)}
 
 /* 🔽 Ajuste do título do gráfico no mobile */
 @media (max-width: 600px) {
-  .list-header {
-    gap: 4px;
-    margin-bottom: 4px;
-    padding: 2px 0;
-    min-height: 28px;  /* altura menor só no celular */
-    flex-direction: column; /* empilha título e seletor */
-    align-items: flex-start;
+  .chart-panel {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    min-height: 160px; /* área do gráfico mais compacta */
   }
-
-  .list-header h2 {
-    font-size: 14px;   /* título menor no mobile */
+  
+  #monthChart {
+    max-height: 180px; /* reduz altura só no mobile */
   }
-
-  #yearFilter {
-    font-size: 12px;   /* seletor menor */
-    padding: 2px 4px;
+  
+  .chartjs-title {
+    font-size: 14px !important; /* título menor */
+    margin-bottom: 4px !important;
   }
 }
