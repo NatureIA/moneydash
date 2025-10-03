@@ -92,10 +92,3 @@ button:hover{transform:translateY(-1px)}
   .main{grid-template-columns: 1fr 420px}
   .ocr-panel{grid-column: span 2}
 }
-
-/* 🔽 Ajuste para reduzir a área do título do gráfico */
-.chartjs-title {
-  padding: 4px !important;   /* diminui a “caixa” do título */
-  margin-bottom: 0 !important;
-  font-size: 14px !important; /* opcional, pode tirar se quiser só o quadrado menor */
-}
