@@ -93,20 +93,14 @@ button:hover{transform:translateY(-1px)}
   .ocr-panel{grid-column: span 2}
 }
 
-/* 🔽 Ajuste do título do gráfico no mobile */
+/* 🔽 Ajuste específico do título do gráfico em telas pequenas */
 @media (max-width: 600px) {
-  .chart-panel {
-    padding-top: 4px;
-    padding-bottom: 4px;
-    min-height: 160px; /* área do gráfico mais compacta */
-  }
-  
   #monthChart {
-    max-height: 180px; /* reduz altura só no mobile */
+    max-height: 180px; /* gráfico mais compacto no mobile */
   }
-  
   .chartjs-title {
-    font-size: 14px !important; /* título menor */
-    margin-bottom: 4px !important;
+    font-size: 14px !important; /* texto do título menor */
+    margin-bottom: 2px !important;
+    padding: 2px !important; /* área do título menor */
   }
 }
