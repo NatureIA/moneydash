@@ -1,94 +1,294 @@
-:root{
-  --bg:#0b1220;
-  --card:#0f1724;
-  --accent:#6ee7b7;
-  --muted:#9aa5b1;
-  --glass: rgba(255,255,255,0.03);
-  --accent2:#60a5fa;
-  --radius:12px;
-  --gap:14px;
-  --maxw:1100px;
-  --glass-2: rgba(255,255,255,0.02);
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+// Plataforma frontend-only: LocalStorage + Tesseract.js OCR
+
+const STORAGE_KEY = "fluxo:contas:v1"
+const BAL_KEY = "fluxo:saldo_inicial:v1"
+
+const listEl = document.getElementById("list")
+const saldoEl = document.getElementById("saldo")
+const initialInput = document.getElementById("initialBalance")
+const saveInitialBtn = document.getElementById("saveInitial")
+const newBtn = document.getElementById("newBtn")
+const modal = document.getElementById("modal")
+const form = document.getElementById("form")
+const closeModal = document.getElementById("closeModal")
+const modalTitle = document.getElementById("modalTitle")
+const f_desc = document.getElementById("f_desc")
+const f_val = document.getElementById("f_val")
+const f_date = document.getElementById("f_date")
+const deleteBtn = document.getElementById("deleteBtn")
+const filterStatus = document.getElementById("filterStatus")
+const searchInput = document.getElementById("search")
+const fileInput = document.getElementById("fileInput")
+const ocrBtn = document.getElementById("ocrBtn")
+const ocrText = document.getElementById("ocrText")
+const exportBtn = document.getElementById("exportBtn")
+const importBtn = document.getElementById("importBtn")
+const importFile = document.getElementById("importFile")
+const themeToggle = document.getElementById("themeToggle")
+const saldoEye = document.getElementById("saldoEye")
+const initialEye = document.getElementById("initialEye")
+const yearFilter = document.getElementById("yearFilter")
+const monthChartEl = document.getElementById("monthChart")
+
+let editingId = null
+let saldoHidden = false
+let initialHidden = false
+let chartInstance = null
+
+// utils
+function loadContas(){ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") }
+function saveContas(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); render() }
+function getInitial(){ return parseFloat(localStorage.getItem(BAL_KEY) || "1000") }
+function setInitial(v){ localStorage.setItem(BAL_KEY, String(v)); render() }
+
+initialInput.value = getInitial()
+saveInitialBtn.onclick = ()=> {
+  const v = parseFloat(initialInput.value || "0")
+  setInitial(v)
 }
 
-*{box-sizing:border-box}
-html,body,#root{height:100%}
-body{
-  margin:0;
-  background:linear-gradient(180deg,#040812 0%,#071027 60%);
-  color:#e6eef6;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
+// saldo
+function calcularSaldo(){
+  const contas = loadContas()
+  const pagas = contas.filter(c=> c.status === "paid")
+  const gastos = pagas.reduce((s,c)=> s + (Number(c.amount)||0), 0)
+  return (Number(getInitial()) || 0) - gastos
+}
+function formatBRL(v){
+  return "R$ " + Number(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2})
 }
 
-body.light{
-  background:linear-gradient(180deg,#f7f9fc 0%,#dfe6ef 100%);
-  color:#111;
+// render
+function render(){
+  const contas = loadContas()
+  const filter = filterStatus.value
+  const q = (searchInput.value || "").toLowerCase()
+  const shown = contas.filter(c=>{
+    if(filter === "pending" && c.status !== "pending") return false
+    if(filter === "paid" && c.status !== "paid") return false
+    if(q && !(c.title || "").toLowerCase().includes(q)) return false
+    return true
+  })
+  listEl.innerHTML = ""
+  shown.forEach(c=>{
+    const el = document.createElement("div")
+    el.className = "item " + (c.status === "paid" ? "paid" : "")
+    el.innerHTML = `
+      <div class="meta">
+        <strong>${escapeHtml(c.title)}</strong>
+        <small>${c.due_date ? c.due_date : ""} • ${formatBRL(c.amount)}</small>
+      </div>
+      <div>
+        <button onclick="togglePaid(${c.id})">${c.status === "pending" ? "Pagar" : "Reabrir"}</button>
+        <button onclick="edit(${c.id})">Editar</button>
+      </div>`
+    listEl.appendChild(el)
+  })
+
+  saldoEl.innerText = saldoHidden ? "••••••" : formatBRL(calcularSaldo())
+  initialInput.type = initialHidden ? "password" : "number"
+
+  atualizarAnosDisponiveis()
+  atualizarGrafico()
 }
-body.light .panel{background:#fff;color:#111}
-body.light .saldo{color:#0d9488}
-body.light button{color:#2563eb;border-color:#ddd}
-body.light button.primary{background:linear-gradient(90deg,#10b981,#34d399);color:white}
-body.light .ocr-text{background:#f0f3f9;color:#111}
 
-.app{max-width:var(--maxw);margin:24px auto;padding:20px}
-.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:12px 18px;background:linear-gradient(90deg,rgba(255,255,255,0.02),transparent);backdrop-filter: blur(6px);border-radius:var(--radius);border:1px solid var(--glass-2)}
-.brand{display:flex;gap:12px;align-items:center;flex:1}
-.logo{width:44px;height:44px;color:var(--accent2);border-radius:8px;flex-shrink:0}
-.brand h1{margin:0;font-size:20px}
-.subtitle{margin:0;font-size:12px;color:var(--muted)}
-.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-button{background:transparent;color:var(--accent2);border:1px solid rgba(255,255,255,0.04);padding:8px 12px;border-radius:8px;cursor:pointer}
-button.primary{background:linear-gradient(90deg,var(--accent),#34d399);color:#042018;border:none;box-shadow:0 6px 18px rgba(34,211,238,0.08)}
-button:hover{transform:translateY(-1px)}
+// helpers
+function escapeHtml(s=''){ return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }
 
-.main{display:grid;grid-template-columns:1fr;gap:16px;margin-top:18px}
-.{background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--glass);box-shadow: 0 6px 24px rgba(2,6,23,0.6)}
-.balance-{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
-.saldo{font-size:24px;font-weight:700;color:var(--accent);margin-top:8px}
-.balance-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.balance-controls input{width:120px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-
-/* ícones olho */
-.eye-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px}
-.eye-btn svg{width:20px;height:20px;color:var(--muted)}
-
-.list-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px}
-.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
-#filterStatus{flex:1;min-width:120px}
-#search{flex:2;min-width:160px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-.list{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto;padding-right:8px}
-.item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);border:1px solid rgba(255,255,255,0.02);flex-wrap:wrap;gap:10px}
-.item .meta{display:flex;flex-direction:column}
-.item .meta small{color:var(--muted)}
-.item.paid{opacity:0.6;text-decoration:line-through}
-.ocr- .ocr-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.ocr- input[type=file]{flex:1;min-width:180px}
-.ocr-text{background:#061021;padding:12px;border-radius:8px;margin-top:10px;min-height:48px;max-height:200px;overflow:auto;font-size:13px}
-.footer{text-align:center;margin-top:18px;color:var(--muted);font-size:13px}
-
-/* modal */
-.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(2,6,23,0.5), rgba(2,6,23,0.6));z-index:80}
-.modal.hidden{display:none}
-.modal-content{width:95%;max-width:420px;background:linear-gradient(180deg,#071320,#081826);padding:18px;border-radius:14px;border:1px solid rgba(255,255,255,0.03)}
-.close{position:absolute;right:10px;top:10px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:18px}
-.modal-content form{display:flex;flex-direction:column;gap:10px}
-.modal-content input{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-.modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;flex-wrap:wrap}
-.hidden{display:none}
-
-/* NOVO: gráfico */
-.chart-panel{min-height:200px}
-#monthChart{width:100%;max-height:220px}
-
-/* responsive */
-@media (min-width:600px){
-  .actions{flex-wrap:nowrap}
-  .filters{flex-wrap:nowrap;width:auto}
-  .ocr-panel .ocr-row{flex-wrap:nowrap}
+// ações
+window.togglePaid = function(id){
+  const contas = loadContas()
+  const i = contas.findIndex(x=>x.id===id)
+  if(i<0) return
+  contas[i].status = contas[i].status === "pending" ? "paid" : "pending"
+  saveContas(contas)
 }
-@media (min-width:900px){
-  .main{grid-template-columns: 1fr 420px}
-  .ocr-panel{grid-column: span 2}
+window.edit = function(id){
+  const contas = loadContas()
+  const c = contas.find(x=>x.id===id)
+  if(!c) return
+  editingId = id
+  modalTitle.innerText = "Editar Conta"
+  f_desc.value = c.title
+  f_val.value = c.amount
+  f_date.value = c.due_date || ""
+  deleteBtn.style.display = "inline-block"
+  openModal()
 }
+newBtn.onclick = () => {
+  editingId = null
+  modalTitle.innerText = "Nova Conta"
+  f_desc.value = ""
+  f_val.value = ""
+  f_date.value = ""
+  deleteBtn.style.display = "none"
+  openModal()
+}
+function openModal(){ modal.classList.remove("hidden"); modal.setAttribute("aria-hidden","false") }
+function close(){ modal.classList.add("hidden"); modal.setAttribute("aria-hidden","true") }
+closeModal.onclick = close
+document.getElementById("modal").addEventListener("click", (e)=>{ if(e.target.id === "modal") close() })
+
+form.onsubmit = (e) => {
+  e.preventDefault()
+  const title = f_desc.value.trim()
+  const amount = parseFloat(f_val.value || "0")
+  const due_date = f_date.value || null
+  let contas = loadContas()
+  if(editingId){
+    const i = contas.findIndex(x=>x.id===editingId)
+    contas[i].title = title; contas[i].amount = amount; contas[i].due_date = due_date
+  } else {
+    const id = Date.now()
+    contas.push({ id, title, amount, due_date, status: "pending" })
+  }
+  saveContas(contas)
+  close()
+}
+deleteBtn.onclick = ()=>{
+  if(!editingId) return
+  let contas = loadContas()
+  contas = contas.filter(x=>x.id !== editingId)
+  saveContas(contas)
+  close()
+}
+
+// OCR
+ocrBtn.onclick = async ()=>{
+  const file = fileInput.files[0]
+  if(!file) return alert("Selecione uma imagem do cupom.")
+  ocrText.textContent = "Processando OCR..."
+  try{
+    const url = URL.createObjectURL(file)
+    const res = await Tesseract.recognize(url, 'por')
+    const txt = (res.data && res.data.text) ? res.data.text.trim() : ""
+    ocrText.textContent = txt || "Nenhum texto detectado."
+    const matches = txt.match(/\d{1,3}(?:[.\d{3}])*,\d{2}/g) || txt.match(/\d+,\d{2}/g) || []
+    let value = 0
+    if(matches.length){
+      const cleaned = matches.map(s => parseFloat(s.replaceAll('.', '').replace(',', '.')))
+      value = Math.max(...cleaned)
+    }
+    const title = txt.split('\n').find(Boolean) || "Cupom"
+    const contas = loadContas()
+    contas.push({ id: Date.now(), title: title.substr(0,80), amount: Number(value||0), due_date: null, status: "pending" })
+    saveContas(contas)
+    alert("Cupom processado e conta adicionada.")
+  }catch(err){
+    console.error(err)
+    ocrText.textContent = "Erro durante OCR: " + (err.message || err)
+  }
+}
+
+// import/export
+exportBtn.onclick = ()=>{
+  const data = localStorage.getItem(STORAGE_KEY) || "[]"
+  const filename = `fluxo-dados-${new Date().toISOString().slice(0,19)}.json`
+  const blob = new Blob([data], {type:'application/json'})
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename; a.click()
+  URL.revokeObjectURL(url)
+}
+importBtn.onclick = ()=> importFile.click()
+importFile.onchange = (e)=>{
+  const f = e.target.files[0]
+  if(!f) return
+  const reader = new FileReader()
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result)
+      if(!Array.isArray(parsed)) throw new Error("Arquivo inválido")
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
+      render()
+      alert("Dados importados com sucesso.")
+    }catch(err){ alert("Erro ao importar: "+err.message) }
+  }
+  reader.readAsText(f)
+}
+
+// search/filter
+filterStatus.onchange = render
+searchInput.oninput = render
+
+// tema
+themeToggle.onclick = ()=>{ document.body.classList.toggle("light"); atualizarGrafico() }
+
+// toggle olhos
+saldoEye.onclick = ()=>{
+  saldoHidden = !saldoHidden
+  render()
+  saldoEye.innerHTML = saldoHidden ? eyeClosedSvg : eyeOpenSvg
+}
+initialEye.onclick = ()=>{
+  initialHidden = !initialHidden
+  render()
+  initialEye.innerHTML = initialHidden ? eyeClosedSvg : eyeOpenSvg
+}
+
+const eyeOpenSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>`
+const eyeClosedSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.97 10.97 0 0 1 12 20c-7 0-11-8-11-8a21.74 21.74 0 0 1 5.17-6.88M9.88 9.88A3 3 0 0 0 12 15a3 3 0 0 0 2.12-5.12"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+
+// gráfico mensal
+function atualizarAnosDisponiveis(){
+  const contas = loadContas()
+  const anos = [...new Set(contas.map(c=>{
+    if(!c.due_date) return null
+    return new Date(c.due_date).getFullYear()
+  }).filter(Boolean))].sort()
+  yearFilter.innerHTML = anos.map(y=>`<option value="${y}">${y}</option>`).join("")
+}
+
+function atualizarGrafico(){
+  const contas = loadContas()
+  const ano = parseInt(yearFilter.value)
+  if(!ano) return
+
+  const meses = {}
+  contas.forEach(c=>{
+    if(!c.due_date) return
+    const d = new Date(c.due_date)
+    if(d.getFullYear() !== ano) return
+    const mes = d.toLocaleString("pt-BR",{month:"short"})
+    meses[mes] = (meses[mes]||0) + (Number(c.amount)||0)
+  })
+
+  const labels = Object.keys(meses)
+  const valores = Object.values(meses)
+
+  if(chartInstance) chartInstance.destroy()
+  chartInstance = new Chart(monthChartEl, {
+    type:"line",
+    data:{
+      labels,
+      datasets:[{
+        data: valores,
+        borderColor:"#60a5fa",
+        backgroundColor:"rgba(96,165,250,0.2)",
+        tension:0.3,
+        fill:true,
+        pointBackgroundColor:"#60a5fa"
+      }]
+    },
+    options:{
+      plugins:{
+        legend:{ display:false },
+        datalabels:{
+          color: document.body.classList.contains("light") ? "#000" : "#fff",
+          anchor:"end",
+          align:"top",
+          formatter: v => formatBRL(v)
+        }
+      },
+      scales:{
+        y:{ display:false }
+      }
+    },
+    plugins:[ChartDataLabels]
+  })
+}
+
+yearFilter.onchange = atualizarGrafico
+
+// start
+render()
